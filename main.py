@@ -16,9 +16,10 @@ async def home(request: Request):
         <body>
             <h1>Ingrese un valor:</h1>
             <form method="post">
-                <input type="number" name="value">
+                <input type="number" name="value"> 
+                <input type="number" name="value2">                
                 <input type="submit" value="Generar diagrama">
-            </form>
+            </form>            
             %s
         </body>
     </html>
@@ -29,10 +30,11 @@ async def home(request: Request):
 async def generate_chart(request: Request):
     form = await request.form()
     value = int(form["value"])
+    value2 = int(form["value2"])
     
     # Crear el diagrama de barras
     fig, ax = plt.subplots()
-    ax.bar(["Valor"], [value])
+    ax.bar(["Valor","valor2"], [value,value2])
     ax.set_ylabel("Valor")
     ax.set_title("Diagrama de barras")
     
@@ -53,9 +55,10 @@ async def generate_chart(request: Request):
         <body>
             <h1>Ingrese un valor:</h1>
             <form method="post">
-                <input type="number" name="value">
+                <input type="number" name="value"> 
+                <input type="number" name="value2">                
                 <input type="submit" value="Generar diagrama">
-            </form>
+            </form>   
             <img src="data:image/png;base64,%s">
         </body>
     </html>
