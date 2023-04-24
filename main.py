@@ -1,34 +1,68 @@
-from fastapi import FastAPI, Form, Request, status
-from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-import uvicorn
-
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    print('Request for index page received')
-    return templates.TemplateResponse('index.html', {"request": request})
+async def home(request: Request):
+    content = """
+    <html>
+        <head>
+            <title>Diagrama de barras</title>
+        </head>
+        <body>
+            <h1>Ingrese un valor:</h1>
+            <form method="post">
+                <input type="number" name="value">
+                <input type="submit" value="Generar diagrama">
+            </form>
+            %s
+        </body>
+    </html>
+    """
+    return content % ""
 
-@app.get('/favicon.ico')
-async def favicon():
-    file_name = 'favicon.ico'
-    file_path = './static/' + file_name
-    return FileResponse(path=file_path, headers={'mimetype': 'image/vnd.microsoft.icon'})
+@app.post("/", response_class=HTMLResponse)
+async def generate_chart(request: Request):
+    form = await request.form()
+    value = int(form["value"])
+    
+    # Crear el diagrama de barras
+    fig, ax = plt.subplots()
+    ax.bar(["Valor"], [value])
+    ax.set_ylabel("Valor")
+    ax.set_title("Diagrama de barras")
+    
+    # Guardar el diagrama en un buffer de bytes
+    buffer = BytesIO()
+    fig.savefig(buffer, format="png")
+    buffer.seek(0)
+    
+    # Convertir el buffer de bytes en una cadena de caracteres base64
+    buffer_b64 = base64.b64encode(buffer.getvalue()).decode()
+    
+    # Mostrar el diagrama en la página web
+    content = """
+    <html>
+        <head>
+            <title>Diagrama de barras</title>
+        </head>
+        <body>
+            <h1>Ingrese un valor:</h1>
+            <form method="post">
+                <input type="number" name="value">
+                <input type="submit" value="Generar diagrama">
+            </form>
+            <img src="data:image/png;base64,%s">
+        </body>
+    </html>
+    """
+    return content % buffer_b64
 
-@app.post('/hello', response_class=HTMLResponse)
-async def hello(request: Request, name: str = Form(...)):
-    if name:
-        print('Request for hello page received with name=%s' % name)
-        return templates.TemplateResponse('hello.html', {"request": request, 'name':name})
-    else:
-        print('Request for hello page received with no name or blank name -- redirecting')
-        return RedirectResponse(request.url_for("index"), status_code=status.HTTP_302_FOUND)
-
-if __name__ == '__main__':
-    uvicorn.run('myapp:app', host='0.0.0.0', port=8000)
-
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+    
