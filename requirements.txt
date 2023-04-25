@@ -2,3 +2,8 @@ fastapi
 uvicorn
 jinja2
 python-multipart
+matplotlib
+io
+base65
+statmodels
+
