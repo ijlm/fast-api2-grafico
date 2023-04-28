@@ -2,7 +2,5 @@ fastapi
 uvicorn
 jinja2
 matplotlib
-io
-base65
 statmodels
 
